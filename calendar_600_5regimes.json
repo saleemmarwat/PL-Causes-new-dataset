@@ -1,0 +1,121 @@
+{
+  "description": "ML-FGA Temporal Regime Calendar — v2",
+  "simulation_duration_s": 620,
+  "warmup_s": 20,
+  "note": "All regimes implemented as direct NS-3.45 simulator callbacks, not post-hoc labels",
+  "regimes": [
+    {
+      "regime": 1,
+      "label": "benign",
+      "start_s": 0,
+      "end_s": 140,
+      "duration_s": 140,
+      "ns3_implementation": "Normal operation — no changes",
+      "traffic_pps": 5,
+      "speed_mps": 1.5,
+      "tx_power_dbm": 20,
+      "attack_active": false,
+      "physical_scenario": "Normal UDP/CBR traffic, RandomWaypoint mobility at 1.5 m/s, TX power 20 dBm"
+    },
+    {
+      "regime": 2,
+      "label": "congestion",
+      "start_s": 140,
+      "end_s": 260,
+      "duration_s": 120,
+      "ns3_implementation": "Traffic rate raised to 100 pps via MlFgaSender::SetRate() callback at t=140s",
+      "traffic_pps": 100,
+      "speed_mps": 1.5,
+      "tx_power_dbm": 20,
+      "attack_active": false,
+      "physical_scenario": "High traffic load causing FQ-CoDel queue overflow and queue_overflow drop events"
+    },
+    {
+      "regime": 3,
+      "label": "mobility",
+      "start_s": 260,
+      "end_s": 380,
+      "duration_s": 120,
+      "ns3_implementation": "Node speed raised to 12.0 m/s via RandomWaypointMobilityModel::SetAttribute() at t=260s; traffic restored to 5 pps",
+      "traffic_pps": 5,
+      "speed_mps": 12.0,
+      "tx_power_dbm": 20,
+      "attack_active": false,
+      "physical_scenario": "High node mobility causing frequent link breaks and phy_drop / collision events"
+    },
+    {
+      "regime": 4,
+      "label": "interference",
+      "start_s": 380,
+      "end_s": 500,
+      "duration_s": 120,
+      "ns3_implementation": "TX power reduced to 4 dBm via WifiPhy::SetTxPowerStart/End() at t=380s; speed restored to 1.5 m/s",
+      "traffic_pps": 5,
+      "speed_mps": 1.5,
+      "tx_power_dbm": 4,
+      "attack_active": false,
+      "physical_scenario": "Low TX power causing PHY reception failures and phy_collision drop events"
+    },
+    {
+      "regime": 5,
+      "label": "malicious",
+      "start_s": 500,
+      "end_s": 620,
+      "duration_s": 120,
+      "ns3_implementation": "Blackhole and selective-forward nodes activated at t=500s; TX power restored to 20 dBm",
+      "traffic_pps": 5,
+      "speed_mps": 1.5,
+      "tx_power_dbm": 20,
+      "attack_active": true,
+      "malicious_fraction": 0.08,
+      "attack_types": ["blackhole", "selective_forward"],
+      "physical_scenario": "~8% of nodes drop forwarded packets; blackhole_activated and selective_activated events logged"
+    }
+  ],
+  "configuration_groups": [
+    {
+      "group": "A",
+      "seeds": "1-28",
+      "n_nodes": 20,
+      "area_m": 150,
+      "description": "Low density — 20 nodes in 150x150m"
+    },
+    {
+      "group": "B",
+      "seeds": "29-56",
+      "n_nodes": 30,
+      "area_m": 200,
+      "description": "Medium density — 30 nodes in 200x200m"
+    },
+    {
+      "group": "C",
+      "seeds": "57-84",
+      "n_nodes": 40,
+      "area_m": 250,
+      "description": "High density — 40 nodes in 250x250m"
+    }
+  ],
+  "output_logs": [
+    "run_N_tx.csv",
+    "run_N_rx.csv",
+    "run_N_radio.csv",
+    "run_N_queue.csv",
+    "run_N_mac.csv",
+    "run_N_mobility.csv",
+    "run_N_drop.csv",
+    "run_N_phybusy.csv"
+  ],
+  "features_used": [
+    "PRR", "delay_ms", "jitter_ms",
+    "snr_db", "rssi_dbm", "noise_floor_dbm",
+    "neighbor_count", "channel_busy_ratio",
+    "queue_len_norm", "link_changes_per_s",
+    "mac_retries", "collisions",
+    "mac_tx_attempts", "mac_tx_success",
+    "queue_drops_rate"
+  ],
+  "features_excluded_leakage": [
+    "pps", "tx_power_dbm", "speed_mps",
+    "ETX", "PM", "PQ", "Peta", "backoff_slots"
+  ]
+}
